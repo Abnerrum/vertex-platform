@@ -1,34 +1,179 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vertex Platform — Fase 1</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vertex Platform — Demo funcional</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<aside>
-  <div class="brand"><span>VERTEX</span><small>TECH SOLUTIONS</small></div>
-  <nav>
-    <button class="active" data-page="dashboard">▦ Dashboard</button>
-    <button data-page="clientes">◎ Clientes</button>
-    <button data-page="projetos">◇ Projetos</button>
-    <button data-page="servicos">☷ Serviços / OS</button>
-    <button data-page="roadmap">↗ Roadmap</button>
-  </nav>
-  <div class="phase">MVP • Fase 1<br><small>Ambiente demonstrativo</small></div>
-</aside>
-<main>
-<header><div><small>VERTEX PLATFORM</small><h1 id="title">Visão geral</h1><div class="deploy-test" style="margin-top:12px;padding:14px 18px;border:2px solid #22d3ee;border-radius:12px;font-weight:800;font-size:18px;text-align:center;">🚀 VERTEX PLATFORM — DEPLOY AUTOMÁTICO ATIVO</div></div><div class="user">AL <span>Abner</span></div></header>
-<section id="dashboard" class="page show">
-  <div class="hero"><div><span class="pill">DESENVOLVIMENTO EM ANDAMENTO</span><h2>Vertex Core chegando ao fluxo completo.</h2><p>API, autenticação, clientes, projetos, Ordens de Serviço e histórico já fazem parte do núcleo funcional.</p></div><div class="progress"><b>Fase 1</b><strong>80%</strong><div><i style="width:80%"></i></div><small>OS + histórico concluídos</small></div></div>
-  <div class="cards"><article><small>CLIENTES</small><b>3</b><span>CRUD disponível na API</span></article><article><small>PROJETOS</small><b>3</b><span>CRUD disponível na API</span></article><article><small>OS ABERTAS</small><b>4</b><span>CRUD + histórico na API</span></article><article><small>RECEITA</small><b>—</b><span>Módulo futuro</span></article></div>
-  <div class="grid"><article class="panel"><h3>Projetos em andamento</h3><div class="project"><b>Vertex Platform</b><span>80%</span><div><i style="width:80%"></i></div><small>Desenvolvimento</small></div><div class="project"><b>Demo AutoCar</b><span>70%</span><div><i style="width:70%"></i></div><small>Protótipo</small></div></article><article class="panel"><h3>Próximos passos</h3><ul><li>Autenticação JWT <em>feito</em></li><li>Clientes CRUD protegido <em>feito</em></li><li>Projetos + regras <em>feito</em></li><li>OS + histórico <em>feito</em></li><li>Integração frontend + API <em>próximo</em></li></ul></article></div>
-</section>
-<section id="clientes" class="page"><div class="section-head"><div><h2>Clientes</h2><p>Empresas atendidas pela Vertex.</p></div><button class="primary">+ Novo cliente</button></div><div class="panel table"><div class="row head"><span>Empresa</span><span>Responsável</span><span>Status</span></div><div class="row"><b>AutoCar Oficina</b><span>João</span><em>Ativo</em></div><div class="row"><b>Loja Horizonte</b><span>Mariana</span><em>Ativo</em></div><div class="row"><b>Vertex Demo</b><span>Abner</span><em>Interno</em></div></div></section>
-<section id="projetos" class="page"><div class="section-head"><div><h2>Projetos</h2><p>Acompanhe o ciclo de cada entrega.</p></div><button class="primary">+ Novo projeto</button></div><div class="kanban"><article><small>PLANEJAMENTO</small><div><b>Site Horizonte</b><p>Vertex Web</p></div></article><article><small>DESENVOLVIMENTO</small><div><b>Vertex Platform</b><p>Produto interno</p></div><div><b>Sistema AutoCar</b><p>Vertex Systems</p></div></article><article><small>TESTES</small><div class="empty">Nenhum projeto</div></article></div></section>
-<section id="servicos" class="page"><div class="section-head"><div><h2>Serviços / OS</h2><p>Solicitações, prioridades, responsáveis, prazos e histórico.</p></div><button class="primary">+ Nova OS</button></div><div class="panel table"><div class="row os head"><span>OS</span><span>Título</span><span>Prioridade</span><span>Status</span></div><div class="row os"><b>OS-000001</b><span>Ajustar relatório</span><strong class="high">Alta</strong><em>Em andamento</em></div><div class="row os"><b>OS-000002</b><span>Nova tela de cadastro</span><strong>Média</strong><em>Aguardando</em></div></div></section>
-<section id="roadmap" class="page"><h2>Roadmap da Fase 1 — Vertex Core</h2><p>Objetivo: fluxo completo funcionando de ponta a ponta. Flow, Data, Connect e Assistant vêm depois, sobre esta base.</p><div class="timeline"><div class="done"><b>01</b><span><strong>Fundação</strong><small>Repositório, API, Docker e protótipo</small></span></div><div class="done"><b>02</b><span><strong>Banco + autenticação</strong><small>SQLAlchemy, usuários, perfis e JWT</small></span></div><div class="done"><b>03</b><span><strong>Clientes + projetos</strong><small>CRUD, filtros e vínculo cliente → projeto</small></span></div><div class="done"><b>04</b><span><strong>OS + histórico</strong><small>Responsável, prazo, status, prioridade e auditoria</small></span></div><div><b>05</b><span><strong>Integração + testes</strong><small>Frontend real, API, permissões e deploy</small></span></div></div></section>
-<footer>Vertex Tech Solutions • Nome provisório do projeto.</footer>
-</main>
+
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <strong>VERTEX</strong>
+      <span>CORE</span>
+    </div>
+    <h1>Entrar na plataforma</h1>
+    <p>Use seu usuário para acessar o ambiente demonstrativo.</p>
+
+    <form id="loginForm" class="form-stack">
+      <label>E-mail
+        <input id="loginEmail" type="email" placeholder="admin@empresa.com" required>
+      </label>
+      <label>Senha
+        <input id="loginPassword" type="password" placeholder="Sua senha" required>
+      </label>
+      <button class="primary wide" type="submit">Entrar</button>
+    </form>
+
+    <details class="first-access">
+      <summary>Primeiro acesso</summary>
+      <p>Use esta opção somente se ainda não existir nenhum administrador no banco.</p>
+      <form id="bootstrapForm" class="form-stack">
+        <label>Nome
+          <input id="bootstrapName" value="Abner" required>
+        </label>
+        <label>E-mail
+          <input id="bootstrapEmail" type="email" placeholder="admin@empresa.com" required>
+        </label>
+        <label>Senha
+          <input id="bootstrapPassword" type="password" minlength="8" placeholder="Mínimo 8 caracteres" required>
+        </label>
+        <button class="secondary wide" type="submit">Criar administrador</button>
+      </form>
+    </details>
+
+    <div id="loginMessage" class="message"></div>
+  </div>
+</div>
+
+<div id="appShell" class="app-shell hidden">
+  <aside>
+    <div class="brand"><span>VERTEX</span><small>CORE • DEMO</small></div>
+    <nav>
+      <button class="active" data-page="dashboard">▦ Dashboard</button>
+      <button data-page="clientes">◎ Clientes</button>
+      <button data-page="projetos">◇ Projetos</button>
+      <button data-page="servicos">☷ Serviços / OS</button>
+      <button data-page="roadmap">↗ Roadmap</button>
+    </nav>
+    <div class="phase">MVP • Fase 1<br><small>Dados reais via API</small></div>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <small>VERTEX PLATFORM</small>
+        <h1 id="title">Visão geral</h1>
+        <span id="apiStatus" class="api-status">Conectando à API...</span>
+      </div>
+      <div class="header-actions">
+        <button id="refreshBtn" class="ghost">↻ Atualizar</button>
+        <div class="user"><span id="userInitials">AL</span><b id="userName">Abner</b></div>
+        <button id="logoutBtn" class="ghost danger">Sair</button>
+      </div>
+    </header>
+
+    <section id="dashboard" class="page show">
+      <div class="hero">
+        <div>
+          <span class="pill">DEMO FUNCIONAL</span>
+          <h2>Vertex Core funcionando de ponta a ponta.</h2>
+          <p>Login, clientes, projetos, ordens de serviço e histórico conectados à API real.</p>
+        </div>
+        <div class="progress">
+          <b>Fase 1</b><strong>95%</strong>
+          <div><i style="width:95%"></i></div>
+          <small>Pronto para apresentação do MVP</small>
+        </div>
+      </div>
+
+      <div class="cards">
+        <article><small>CLIENTES</small><b id="totalClients">0</b><span>Base cadastrada</span></article>
+        <article><small>PROJETOS</small><b id="totalProjects">0</b><span>Projetos registrados</span></article>
+        <article><small>OS ABERTAS</small><b id="totalOpenOs">0</b><span>Operação em andamento</span></article>
+        <article><small>TOTAL DE OS</small><b id="totalOs">0</b><span>Histórico operacional</span></article>
+      </div>
+
+      <div class="grid">
+        <article class="panel">
+          <div class="panel-head"><h3>Projetos em andamento</h3><span class="badge">Tempo real</span></div>
+          <div id="dashboardProjects" class="project-list"></div>
+        </article>
+        <article class="panel">
+          <h3>Fluxo do produto</h3>
+          <ul>
+            <li>Login e perfis <em>feito</em></li>
+            <li>Clientes <em>feito</em></li>
+            <li>Projetos <em>feito</em></li>
+            <li>OS + histórico <em>feito</em></li>
+            <li>Deploy de produção <em>próximo</em></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="clientes" class="page">
+      <div class="section-head">
+        <div><h2>Clientes</h2><p>Cadastre e acompanhe empresas atendidas.</p></div>
+        <button id="newClientBtn" class="primary">+ Novo cliente</button>
+      </div>
+      <div class="panel table">
+        <div class="row head"><span>Empresa</span><span>Responsável</span><span>Status</span></div>
+        <div id="clientsRows"></div>
+      </div>
+    </section>
+
+    <section id="projetos" class="page">
+      <div class="section-head">
+        <div><h2>Projetos</h2><p>Acompanhe o ciclo de cada entrega.</p></div>
+        <button id="newProjectBtn" class="primary">+ Novo projeto</button>
+      </div>
+      <div class="kanban">
+        <article><small>PLANEJAMENTO</small><div id="projectsPlanning" class="column-items"></div></article>
+        <article><small>DESENVOLVIMENTO</small><div id="projectsDevelopment" class="column-items"></div></article>
+        <article><small>TESTES / CONCLUÍDOS</small><div id="projectsTesting" class="column-items"></div></article>
+      </div>
+    </section>
+
+    <section id="servicos" class="page">
+      <div class="section-head">
+        <div><h2>Serviços / OS</h2><p>Prioridade, status, prazo e auditoria.</p></div>
+        <button id="newOsBtn" class="primary">+ Nova OS</button>
+      </div>
+      <div class="panel table">
+        <div class="row os head"><span>OS</span><span>Título</span><span>Prioridade</span><span>Status</span><span>Ação</span></div>
+        <div id="osRows"></div>
+      </div>
+    </section>
+
+    <section id="roadmap" class="page">
+      <h2>Roadmap da Fase 1 — Vertex Core</h2>
+      <p>Base pronta para demonstração. O próximo avanço é transformar o MVP em produto de produção.</p>
+      <div class="timeline">
+        <div class="done"><b>01</b><span><strong>Fundação</strong><small>Repositório, API, Docker e protótipo</small></span></div>
+        <div class="done"><b>02</b><span><strong>Banco + autenticação</strong><small>Usuários, perfis e JWT</small></span></div>
+        <div class="done"><b>03</b><span><strong>Clientes + projetos</strong><small>CRUD, filtros e vínculo cliente → projeto</small></span></div>
+        <div class="done"><b>04</b><span><strong>OS + histórico</strong><small>Responsável, prazo, status, prioridade e auditoria</small></span></div>
+        <div class="done"><b>05</b><span><strong>Integração frontend + API</strong><small>Interface conectada ao backend real</small></span></div>
+      </div>
+    </section>
+
+    <footer>Vertex Tech Solutions • Nome provisório do projeto • MVP demonstrável</footer>
+  </main>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <button id="closeModalBtn" class="modal-close">×</button>
+    <h2 id="modalTitle">Novo registro</h2>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
 <script src="app.js"></script>
-</body></html>
+</body>
+</html>
