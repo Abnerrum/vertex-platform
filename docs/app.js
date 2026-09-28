@@ -2,9 +2,8 @@ const SAME_ORIGIN_API =
   (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") &&
   window.location.port === "8000";
 
-const API_BASE = SAME_ORIGIN_API
-  ? "/api/v1"
-  : "http://127.0.0.1:8000/api/v1";
+const ONLINE_DEMO = window.location.hostname.endsWith(".netlify.app");
+const API_BASE = SAME_ORIGIN_API ? "/api/v1" : null;
 
 const state = {
   token: localStorage.getItem("vertex_token") || "",
@@ -56,7 +55,203 @@ function escapeHtml(value = "") {
     .replaceAll("'", "&#039;");
 }
 
+function demoLoad() {
+  const raw = localStorage.getItem("vertex_demo_db");
+  if (raw) return JSON.parse(raw);
+  const db = { user: null, clients: [], projects: [], serviceOrders: [], history: [] };
+  localStorage.setItem("vertex_demo_db", JSON.stringify(db));
+  return db;
+}
+
+function demoSave(db) {
+  localStorage.setItem("vertex_demo_db", JSON.stringify(db));
+}
+
+function demoAuthResponse(user) {
+  return { access_token: "vertex-demo-token", token_type: "bearer", user };
+}
+
+function demoRequireUser(db) {
+  if (!state.token || !db.user) {
+    const error = new Error("Autenticação necessária");
+    error.status = 401;
+    throw error;
+  }
+}
+
+async function demoApi(path, options = {}) {
+  const db = demoLoad();
+  const method = (options.method || "GET").toUpperCase();
+  const body = options.body ? JSON.parse(options.body) : null;
+
+  if (path === "/auth/bootstrap" && method === "POST") {
+    if (db.user) {
+      const error = new Error("Administrador inicial já configurado");
+      error.status = 409;
+      throw error;
+    }
+    db.user = {
+      id: 1,
+      name: body.name,
+      email: body.email.toLowerCase(),
+      role: "admin",
+      is_active: true,
+      demo_password: body.password
+    };
+    demoSave(db);
+    return demoAuthResponse(db.user);
+  }
+
+  if (path === "/auth/login" && method === "POST") {
+    if (!db.user || db.user.email !== body.email.toLowerCase() || db.user.demo_password !== body.password) {
+      const error = new Error("E-mail ou senha inválidos");
+      error.status = 401;
+      throw error;
+    }
+    return demoAuthResponse(db.user);
+  }
+
+  if (path === "/auth/me") {
+    demoRequireUser(db);
+    return db.user;
+  }
+
+  demoRequireUser(db);
+
+  if (path === "/dashboard") {
+    return {
+      module: "Vertex Core",
+      phase: "MVP - Demo Online",
+      version: "0.6.2-demo",
+      authentication: "enabled",
+      totals: {
+        users: db.user ? 1 : 0,
+        clients: db.clients.length,
+        projects: db.projects.length,
+        service_orders: db.serviceOrders.length,
+        open_service_orders: db.serviceOrders.filter(o => !["completed", "cancelled"].includes(o.status)).length
+      }
+    };
+  }
+
+  if (path === "/clients" && method === "GET") return [...db.clients].reverse();
+
+  if (path === "/clients" && method === "POST") {
+    const item = {
+      id: (db.clients.at(-1)?.id || 0) + 1,
+      company_name: body.company_name,
+      responsible_name: body.responsible_name,
+      email: body.email || null,
+      phone: body.phone || null,
+      document: body.document || null,
+      notes: body.notes || null,
+      status: body.status || "active",
+      created_at: new Date().toISOString()
+    };
+    db.clients.push(item);
+    demoSave(db);
+    return item;
+  }
+
+  if (path === "/projects" && method === "GET") return [...db.projects].reverse();
+
+  if (path === "/projects" && method === "POST") {
+    const item = {
+      id: (db.projects.at(-1)?.id || 0) + 1,
+      client_id: body.client_id,
+      name: body.name,
+      description: body.description || null,
+      project_type: body.project_type || "web",
+      status: body.status || "planning",
+      priority: body.priority || "medium",
+      progress: body.progress || 0,
+      start_date: body.start_date || null,
+      due_date: body.due_date || null,
+      created_at: new Date().toISOString()
+    };
+    db.projects.push(item);
+    demoSave(db);
+    return item;
+  }
+
+  if (path === "/service-orders" && method === "GET") return [...db.serviceOrders].reverse();
+
+  if (path === "/service-orders" && method === "POST") {
+    const id = (db.serviceOrders.at(-1)?.id || 0) + 1;
+    const item = {
+      id,
+      code: `OS-${String(id).padStart(6, "0")}`,
+      client_id: body.client_id,
+      project_id: body.project_id || null,
+      assigned_user_id: null,
+      created_by_user_id: 1,
+      title: body.title,
+      description: body.description || null,
+      priority: body.priority || "medium",
+      status: body.status || "open",
+      due_date: body.due_date || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    db.serviceOrders.push(item);
+    db.history.push({
+      id: db.history.length + 1,
+      service_order_id: id,
+      changed_by_user_id: 1,
+      field: "status",
+      old_value: null,
+      new_value: item.status,
+      note: "OS criada",
+      created_at: new Date().toISOString()
+    });
+    demoSave(db);
+    return item;
+  }
+
+  const osPatch = path.match(/^\/service-orders\/(\d+)$/);
+  if (osPatch && method === "PATCH") {
+    const id = Number(osPatch[1]);
+    const item = db.serviceOrders.find(o => o.id === id);
+    if (!item) {
+      const error = new Error("OS não encontrada");
+      error.status = 404;
+      throw error;
+    }
+    Object.entries(body || {}).forEach(([field, value]) => {
+      if (field === "note") return;
+      if (item[field] !== value) {
+        db.history.push({
+          id: db.history.length + 1,
+          service_order_id: id,
+          changed_by_user_id: 1,
+          field,
+          old_value: item[field] == null ? null : String(item[field]),
+          new_value: value == null ? null : String(value),
+          note: body.note || "Alteração registrada",
+          created_at: new Date().toISOString()
+        });
+        item[field] = value;
+      }
+    });
+    item.updated_at = new Date().toISOString();
+    demoSave(db);
+    return item;
+  }
+
+  const hist = path.match(/^\/service-orders\/(\d+)\/history$/);
+  if (hist && method === "GET") {
+    const id = Number(hist[1]);
+    return db.history.filter(h => h.service_order_id === id);
+  }
+
+  const error = new Error("Operação não disponível na demo");
+  error.status = 404;
+  throw error;
+}
+
 async function api(path, options = {}) {
+  if (ONLINE_DEMO) return demoApi(path, options);
+
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   if (state.token) headers.Authorization = `Bearer ${state.token}`;
 
@@ -64,11 +259,7 @@ async function api(path, options = {}) {
   try {
     response = await fetch(`${API_BASE}${path}`, { ...options, headers });
   } catch (_) {
-    const error = new Error(
-      window.location.hostname.includes("netlify")
-        ? "O site do Netlify está sem backend. Para a demo funcional, abra http://127.0.0.1:8000/app/"
-        : "Não foi possível conectar à API. Confirme se o backend está rodando."
-    );
+    const error = new Error("Não foi possível conectar à API. Confirme se o backend está rodando.");
     error.status = 0;
     throw error;
   }
