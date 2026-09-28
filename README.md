@@ -23,7 +23,7 @@ Objetivo: fluxo completo funcionando de ponta a ponta.
 
 Login → Dashboard → Clientes → Projetos → Serviços/OS → Histórico
 
-### Status atual — v0.4.0
+### Status atual — v0.5.0
 - API FastAPI com documentação interativa
 - Docker/PostgreSQL para o banco
 - Primeiro administrador via bootstrap
@@ -31,15 +31,18 @@ Login → Dashboard → Clientes → Projetos → Serviços/OS → Histórico
 - Perfis: `admin`, `commercial`, `technical`, `finance`
 - CRUD de clientes protegido por autenticação
 - CRUD de projetos vinculado aos clientes
-- Filtros de clientes e projetos
-- Dashboard da API com totais de usuários, clientes e projetos
-- Testes de saúde, autenticação, clientes e projetos
+- CRUD de Ordens de Serviço vinculado a cliente e projeto
+- Responsável, prioridade, prazo e status nas OS
+- Histórico automático das principais alterações de OS
+- Filtros de clientes, projetos e ordens de serviço
+- Dashboard com totais de usuários, clientes, projetos e OS
+- Testes de saúde, autenticação, clientes, projetos e OS
 
 ### Próximos passos
-- Ordens de serviço com prioridade, responsável e prazo
-- Histórico e auditoria das mudanças de status
-- Permissões por perfil nas rotas de clientes e projetos
-- Frontend React consumindo a API
+- Permissões por perfil nas rotas
+- Frontend React consumindo a API real
+- Dashboard real com indicadores
+- Deploy integrado
 
 ## Stack
 - Backend: Python + FastAPI
@@ -87,12 +90,14 @@ POST /api/v1/auth/bootstrap
 }
 ```
 
-Depois, faça login em `POST /api/v1/auth/login`. As rotas de clientes, projetos e dashboard exigem o token Bearer retornado pelo login.
+Depois, faça login em `POST /api/v1/auth/login`. As rotas de clientes, projetos, OS e dashboard exigem o token Bearer retornado pelo login.
 
 ## Principais rotas atuais
 - `/api/v1/auth/*` — autenticação e usuários
 - `/api/v1/clients` — clientes
 - `/api/v1/projects` — projetos
+- `/api/v1/service-orders` — ordens de serviço
+- `/api/v1/service-orders/{id}/history` — histórico da OS
 - `/api/v1/dashboard` — indicadores básicos
 
 ## Testes
@@ -106,7 +111,7 @@ Cada teste roda com o banco recriado do zero, então a suíte pode ser executada
 
 ## Protótipo visual
 
-O diretório `docs/` contém a interface demonstrável (dados fixos, sem integração com a API) e está preparado para GitHub Pages.
+O diretório `docs/` contém a interface demonstrável e está preparado para GitHub Pages. A etapa seguinte será substituir os dados fixos por dados vindos da API.
 
 ## Estratégia
 
