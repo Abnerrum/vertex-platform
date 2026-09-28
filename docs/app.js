@@ -16,7 +16,8 @@ const state = {
 const titles = {
   dashboard: "Visão geral",
   clientes: "Clientes",
-  softwares: "Softwares",\n  projetos: "Projetos",
+  softwares: "Softwares",
+  projetos: "Projetos",
   servicos: "Serviços / OS",
   roadmap: "Estratégia"
 };
@@ -426,7 +427,7 @@ async function loadAll() {
 function renderDashboard(data) {
   $("totalClients").textContent = data.totals.clients;
   $("totalProjects").textContent = data.totals.projects;
-  $("totalOs").textContent = data.totals.service_orders;
+  if ($("totalOs")) $("totalOs").textContent = data.totals.service_orders;
   $("totalOpenOs").textContent = data.totals.open_service_orders;
 
   const active = state.projects.filter(p => !["completed", "cancelled"].includes(p.status)).slice(0, 4);
@@ -505,7 +506,7 @@ async function advanceOrder(id, next) {
   try {
     await api(`/service-orders/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ status: next, note: "Atualização realizada pela interface demonstrativa" })
+      body: JSON.stringify({ status: next, note: "Atualização realizada pela interface" })
     });
     showToast(`OS atualizada para ${statusLabel[next] || next}.`);
     await loadAll();
