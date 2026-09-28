@@ -1,10 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.clients import router as clients_router
+from app.database.session import Base, engine
+import app.models  # noqa: F401
+
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(
     title="Vertex Platform API",
-    version="0.1.0",
-    description="API inicial da Vertex Tech Solutions.",
+    version="0.2.0",
+    description="API de gestão da Vertex Tech Solutions.",
 )
 
 app.add_middleware(
@@ -15,9 +21,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(clients_router)
+
 @app.get("/")
 def root():
-    return {"name": "Vertex Platform API", "version": "0.1.0", "status": "development"}
+    return {"name": "Vertex Platform API", "version": "0.2.0", "status": "development"}
 
 @app.get("/health")
 def health():
@@ -25,9 +33,4 @@ def health():
 
 @app.get("/api/v1/dashboard")
 def dashboard():
-    return {
-        "clients": 3,
-        "projects": 3,
-        "open_orders": 4,
-        "phase": "MVP - Fase 1"
-    }
+    return {"phase": "MVP - Fase 1", "version": "0.2.0"}
