@@ -20,11 +20,12 @@ def hash_password(password: str) -> str:
         salt,
         PBKDF2_ITERATIONS,
     )
-    return "pbkdf2_sha256$${}$${}$${}".replace("\$","$").format(
-        PBKDF2_ITERATIONS,
+    return "$".join([
+        "pbkdf2_sha256",
+        str(PBKDF2_ITERATIONS),
         base64.urlsafe_b64encode(salt).decode("ascii"),
         base64.urlsafe_b64encode(digest).decode("ascii"),
-    )
+    ])
 
 def verify_password(password: str, encoded: str) -> bool:
     try:
