@@ -16,9 +16,9 @@ const state = {
 const titles = {
   dashboard: "Visão geral",
   clientes: "Clientes",
-  projetos: "Projetos",
+  softwares: "Softwares",\n  projetos: "Projetos",
   servicos: "Serviços / OS",
-  roadmap: "Roadmap"
+  roadmap: "Estratégia"
 };
 
 const statusLabel = {
@@ -691,3 +691,9 @@ async function openHistory(id) {
 }
 
 restoreSession();
+
+document.querySelectorAll("[data-page-target]").forEach(btn => btn.addEventListener("click", () => {
+  const target = btn.dataset.pageTarget;
+  const navButton = document.querySelector('nav button[data-page="' + target + '"]');
+  if (navButton) navButton.click();
+}));
