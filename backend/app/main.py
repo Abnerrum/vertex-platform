@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from app import __version__
@@ -46,6 +49,7 @@ def root():
         "name": "Vertex Platform API",
         "version": __version__,
         "status": "development",
+        "demo": "/app/",
     }
 
 
@@ -74,3 +78,8 @@ def dashboard(
             .count(),
         },
     }
+
+
+FRONTEND_DIR = Path(__file__).resolve().parents[2] / "docs"
+if FRONTEND_DIR.exists():
+    app.mount("/app", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
