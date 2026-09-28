@@ -6,9 +6,11 @@ from app import __version__
 from app.api.auth import get_current_user, router as auth_router
 from app.api.clients import router as clients_router
 from app.api.projects import router as projects_router
+from app.api.service_orders import router as service_orders_router
 from app.database.session import Base, engine, get_db
 from app.models.client import Client
 from app.models.project import Project
+from app.models.service_order import ServiceOrder
 from app.models.user import User
 
 Base.metadata.create_all(bind=engine)
@@ -30,6 +32,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(clients_router)
 app.include_router(projects_router)
+app.include_router(service_orders_router)
 
 
 @app.get("/")
@@ -60,5 +63,9 @@ def dashboard(
             "users": db.query(User).count(),
             "clients": db.query(Client).count(),
             "projects": db.query(Project).count(),
+            "service_orders": db.query(ServiceOrder).count(),
+            "open_service_orders": db.query(ServiceOrder)
+            .filter(ServiceOrder.status.notin_(["completed", "cancelled"]))
+            .count(),
         },
     }
