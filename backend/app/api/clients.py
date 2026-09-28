@@ -13,6 +13,17 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)],
 )
 
+REQUIRED_FIELDS = ("company_name", "responsible_name", "status")
+
+
+def reject_null_required_fields(changes: dict) -> None:
+    for field in REQUIRED_FIELDS:
+        if field in changes and changes[field] is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"O campo '{field}' não pode ficar vazio",
+            )
+
 @router.get("", response_model=list[ClientRead])
 def list_clients(
     q: str | None = Query(default=None, max_length=120),
@@ -53,7 +64,10 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
     if not client:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
 
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    changes = payload.model_dump(exclude_unset=True)
+    reject_null_required_fields(changes)
+
+    for field, value in changes.items():
         setattr(client, field, value)
 
     db.commit()

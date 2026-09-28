@@ -15,9 +15,28 @@ router = APIRouter(
 )
 
 
+REQUIRED_FIELDS = (
+    "client_id",
+    "name",
+    "project_type",
+    "status",
+    "priority",
+    "progress",
+)
+
+
 def ensure_client_exists(client_id: int, db: Session) -> None:
     if not db.get(Client, client_id):
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
+
+
+def reject_null_required_fields(changes: dict) -> None:
+    for field in REQUIRED_FIELDS:
+        if field in changes and changes[field] is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"O campo '{field}' não pode ficar vazio",
+            )
 
 
 @router.get("", response_model=list[ProjectRead])
@@ -72,7 +91,8 @@ def update_project(
         raise HTTPException(status_code=404, detail="Projeto não encontrado")
 
     changes = payload.model_dump(exclude_unset=True)
-    if "client_id" in changes and changes["client_id"] is not None:
+    reject_null_required_fields(changes)
+    if "client_id" in changes:
         ensure_client_exists(changes["client_id"], db)
 
     for field, value in changes.items():
