@@ -43,6 +43,33 @@ def test_bootstrap_login_and_client_crud():
     assert updated.status_code == 200
     assert updated.json()["status"] == "inactive"
 
+    project = client.post(
+        "/api/v1/projects",
+        headers=headers,
+        json={
+            "client_id": client_id,
+            "name": "Sistema Cliente Teste",
+            "project_type": "web",
+            "status": "development",
+            "priority": "high",
+            "progress": 30,
+        },
+    )
+    assert project.status_code == 201, project.text
+    project_id = project.json()["id"]
+
+    project_update = client.patch(
+        f"/api/v1/projects/{project_id}",
+        headers=headers,
+        json={"progress": 60, "status": "testing"},
+    )
+    assert project_update.status_code == 200
+    assert project_update.json()["progress"] == 60
+
+    dashboard = client.get("/api/v1/dashboard", headers=headers)
+    assert dashboard.status_code == 200
+    assert dashboard.json()["totals"]["projects"] == 1
+
     login = client.post(
         "/api/v1/auth/login",
         json={
@@ -51,6 +78,12 @@ def test_bootstrap_login_and_client_crud():
         },
     )
     assert login.status_code == 200
+
+    project_deleted = client.delete(
+        f"/api/v1/projects/{project_id}",
+        headers=headers,
+    )
+    assert project_deleted.status_code == 204
 
     deleted = client.delete(
         f"/api/v1/clients/{client_id}",
