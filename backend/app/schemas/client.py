@@ -12,6 +12,15 @@ class ClientBase(BaseModel):
 class ClientCreate(ClientBase):
     pass
 
+class ClientUpdate(BaseModel):
+    company_name: str | None = None
+    responsible_name: str | None = None
+    email: EmailStr | None = None
+    phone: str | None = None
+    document: str | None = None
+    notes: str | None = None
+    status: str | None = None
+
 class ClientRead(ClientBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
