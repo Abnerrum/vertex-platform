@@ -14,15 +14,17 @@ MVP para administrar usuários, clientes, projetos, ordens de serviço e indicad
 - Testes: Pytest
 - Containers: Docker
 
-## Status atual — v0.3.0
+## Status atual — v0.4.0
 - API FastAPI
 - Docker/PostgreSQL
-- Modelo de usuários e clientes
 - Primeiro administrador via bootstrap
 - Login JWT
 - Perfis: admin, comercial, técnico e financeiro
 - CRUD de clientes protegido por autenticação
-- Testes de saúde, login e clientes
+- CRUD de projetos vinculado aos clientes
+- Filtros de clientes e projetos
+- Dashboard da API com totais de usuários, clientes e projetos
+- Testes de saúde, autenticação, clientes e projetos
 
 ## Fluxo principal
 Login → Dashboard → Clientes → Projetos → Serviços/OS → Histórico
@@ -47,7 +49,7 @@ Com o banco vazio, use uma única vez:
 POST /api/v1/auth/bootstrap
 ```
 
-Exemplo de corpo:
+Exemplo:
 
 ```json
 {
@@ -57,7 +59,13 @@ Exemplo de corpo:
 }
 ```
 
-Depois, faça login em `POST /api/v1/auth/login`. As rotas de clientes exigem o token Bearer retornado pelo login.
+Depois, faça login em `POST /api/v1/auth/login`. As rotas de clientes e projetos exigem o token Bearer retornado pelo login.
+
+## Principais rotas atuais
+- `/api/v1/auth/*` — autenticação e usuários
+- `/api/v1/clients` — clientes
+- `/api/v1/projects` — projetos
+- `/api/v1/dashboard` — indicadores básicos
 
 ## Testes
 ```bash
