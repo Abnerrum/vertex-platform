@@ -1,4 +1,10 @@
-const API_BASE = "http://127.0.0.1:8000/api/v1";
+const SAME_ORIGIN_API =
+  (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") &&
+  window.location.port === "8000";
+
+const API_BASE = SAME_ORIGIN_API
+  ? "/api/v1"
+  : "http://127.0.0.1:8000/api/v1";
 
 const state = {
   token: localStorage.getItem("vertex_token") || "",
@@ -54,7 +60,18 @@ async function api(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   if (state.token) headers.Authorization = `Bearer ${state.token}`;
 
-  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  } catch (_) {
+    const error = new Error(
+      window.location.hostname.includes("netlify")
+        ? "O site do Netlify está sem backend. Para a demo funcional, abra http://127.0.0.1:8000/app/"
+        : "Não foi possível conectar à API. Confirme se o backend está rodando."
+    );
+    error.status = 0;
+    throw error;
+  }
 
   if (response.status === 204) return null;
 
@@ -211,7 +228,7 @@ async function loadAll() {
     $("apiStatus").textContent = "API indisponível";
     $("apiStatus").className = "api-status offline";
     if (error.status === 401) logout();
-    else showToast("Não foi possível carregar os dados. Confirme se a API está rodando na porta 8000.", "error");
+    else showToast(error.message, "error");
   }
 }
 
