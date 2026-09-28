@@ -42,7 +42,12 @@ def test_project_workflow(api, admin_headers, client_id):
 
     dashboard = api.get("/api/v1/dashboard", headers=admin_headers)
     assert dashboard.status_code == 200
-    assert dashboard.json()["totals"] == {"users": 1, "clients": 1, "projects": 1}
+    totals = dashboard.json()["totals"]
+    assert totals["users"] == 1
+    assert totals["clients"] == 1
+    assert totals["projects"] == 1
+    assert totals["service_orders"] == 0
+    assert totals["open_service_orders"] == 0
 
     deleted = api.delete(f"/api/v1/projects/{project_id}", headers=admin_headers)
     assert deleted.status_code == 204
