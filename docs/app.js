@@ -680,8 +680,8 @@ async function openHistory(id) {
     openModal("Histórico da OS", history.length
       ? `<div class="history-list">${history.map(item => `
           <div class="history-item">
-            <b>${escapeHtml(item.field)}</b>
-            <span>${escapeHtml(item.old_value ?? "—")} → ${escapeHtml(item.new_value ?? "—")}</span>
+            <b>${escapeHtml(item.field === "status" ? "Status" : item.field)}</b>
+            <span>${escapeHtml(item.field === "status" ? (statusLabel[item.old_value] || item.old_value || "—") : (item.old_value ?? "—"))} → ${escapeHtml(item.field === "status" ? (statusLabel[item.new_value] || item.new_value || "—") : (item.new_value ?? "—"))}</span>
             <small>${escapeHtml(item.note || "Alteração registrada")}</small>
           </div>
         `).join("")}</div>`
