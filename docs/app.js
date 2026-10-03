@@ -1,6 +1,5 @@
 const SAME_ORIGIN_API =
-  (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") &&
-  window.location.port === "8000";
+  window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
 
 const ONLINE_DEMO = window.location.hostname.endsWith(".netlify.app");
 const API_BASE = SAME_ORIGIN_API ? "/api/v1" : null;
@@ -10,12 +9,14 @@ const state = {
   user: null,
   clients: [],
   projects: [],
-  serviceOrders: []
+  serviceOrders: [],
+  obligations: []
 };
 
 const titles = {
   dashboard: "Visão geral",
   clientes: "Clientes",
+  obrigacoes: "Obrigações contábeis",
   softwares: "Softwares",
   projetos: "Projetos",
   servicos: "Serviços / OS",
@@ -33,7 +34,16 @@ const statusLabel = {
   assigned: "Atribuída",
   in_progress: "Em andamento",
   waiting: "Aguardando",
-  cancelled: "Cancelada"
+  cancelled: "Cancelada",
+  pending: "Pendente"
+};
+
+const departmentLabel = {
+  fiscal: "Fiscal",
+  payroll: "Folha",
+  accounting: "Contábil",
+  corporate: "Societário",
+  other: "Outros"
 };
 
 const priorityLabel = {
@@ -59,7 +69,7 @@ function escapeHtml(value = "") {
 function demoLoad() {
   const raw = localStorage.getItem("vertex_demo_db");
   if (raw) return JSON.parse(raw);
-  const db = { user: null, clients: [], projects: [], serviceOrders: [], history: [] };
+  const db = { user: null, clients: [], projects: [], serviceOrders: [], obligations: [], history: [] };
   localStorage.setItem("vertex_demo_db", JSON.stringify(db));
   return db;
 }
@@ -129,8 +139,14 @@ async function demoApi(path, options = {}) {
         users: db.user ? 1 : 0,
         clients: db.clients.length,
         projects: db.projects.length,
+        active_projects: db.projects.filter(p => !["completed", "cancelled"].includes(p.status)).length,
         service_orders: db.serviceOrders.length,
-        open_service_orders: db.serviceOrders.filter(o => !["completed", "cancelled"].includes(o.status)).length
+        open_service_orders: db.serviceOrders.filter(o => !["completed", "cancelled"].includes(o.status)).length,
+        audit_events: db.history.length,
+        open_obligations: (db.obligations || []).filter(item => item.status !== "completed").length,
+        overdue_obligations: (db.obligations || []).filter(item =>
+          item.status !== "completed" && item.due_date < new Date().toISOString().slice(0, 10)
+        ).length
       }
     };
   }
@@ -176,6 +192,35 @@ async function demoApi(path, options = {}) {
   }
 
   if (path === "/service-orders" && method === "GET") return [...db.serviceOrders].reverse();
+
+  if (path === "/accounting-obligations" && method === "GET") return [...(db.obligations || [])].reverse();
+
+  if (path === "/accounting-obligations" && method === "POST") {
+    const item = {
+      id: ((db.obligations || []).at(-1)?.id || 0) + 1,
+      ...body,
+      status: body.status || "pending",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    db.obligations ||= [];
+    db.obligations.push(item);
+    demoSave(db);
+    return item;
+  }
+
+  const obligationPatch = path.match(/^\/accounting-obligations\/(\d+)$/);
+  if (obligationPatch && method === "PATCH") {
+    const item = (db.obligations || []).find(obligation => obligation.id === Number(obligationPatch[1]));
+    if (!item) {
+      const error = new Error("Obrigação não encontrada");
+      error.status = 404;
+      throw error;
+    }
+    Object.assign(item, body, { updated_at: new Date().toISOString() });
+    demoSave(db);
+    return item;
+  }
 
   if (path === "/service-orders" && method === "POST") {
     const id = (db.serviceOrders.at(-1)?.id || 0) + 1;
@@ -386,8 +431,11 @@ document.querySelectorAll("nav button").forEach(btn => btn.addEventListener("cli
 $("logoutBtn").addEventListener("click", logout);
 $("refreshBtn").addEventListener("click", loadAll);
 $("newClientBtn").addEventListener("click", openClientForm);
+$("newObligationBtn").addEventListener("click", openObligationForm);
 $("newProjectBtn").addEventListener("click", openProjectForm);
 $("newOsBtn").addEventListener("click", openOsForm);
+$("obligationCompetenceFilter").addEventListener("input", renderObligations);
+$("obligationDepartmentFilter").addEventListener("change", renderObligations);
 $("closeModalBtn").addEventListener("click", closeModal);
 $("modal").addEventListener("click", (event) => {
   if (event.target.id === "modal") closeModal();
@@ -398,21 +446,24 @@ async function loadAll() {
   $("apiStatus").className = "api-status";
 
   try {
-    const [dashboard, clients, projects, orders] = await Promise.all([
+    const [dashboard, clients, projects, orders, obligations] = await Promise.all([
       api("/dashboard"),
       api("/clients"),
       api("/projects"),
-      api("/service-orders")
+      api("/service-orders"),
+      api("/accounting-obligations")
     ]);
 
     state.clients = clients;
     state.projects = projects;
     state.serviceOrders = orders;
+    state.obligations = obligations;
 
     renderDashboard(dashboard);
     renderClients();
     renderProjects();
     renderServiceOrders();
+    renderObligations();
 
     $("apiStatus").textContent = `API online • v${dashboard.version}`;
     $("apiStatus").className = "api-status online";
@@ -426,21 +477,34 @@ async function loadAll() {
 
 function renderDashboard(data) {
   $("totalClients").textContent = data.totals.clients;
-  $("totalProjects").textContent = data.totals.projects;
-  if ($("totalOs")) $("totalOs").textContent = data.totals.service_orders;
+  $("totalActiveProjects").textContent = data.totals.active_projects;
   $("totalOpenOs").textContent = data.totals.open_service_orders;
+  $("totalAuditEvents").textContent = data.totals.audit_events;
 
-  const active = state.projects.filter(p => !["completed", "cancelled"].includes(p.status)).slice(0, 4);
-  $("dashboardProjects").innerHTML = active.length
-    ? active.map(p => `
+  const activeProjects = state.projects
+    .filter(project => !["completed", "cancelled"].includes(project.status))
+    .slice(0, 5);
+  $("dashboardProjects").innerHTML = activeProjects.length
+    ? activeProjects.map(project => {
+        const client = state.clients.find(candidate => candidate.id === project.client_id);
+        return `
       <div class="project">
-        <b>${escapeHtml(p.name)}</b>
-        <span>${p.progress}%</span>
-        <div><i style="width:${p.progress}%"></i></div>
-        <small>${escapeHtml(statusLabel[p.status] || p.status)} • ${escapeHtml(priorityLabel[p.priority] || p.priority)}</small>
+        <b>${escapeHtml(project.name)}</b>
+        <span>${project.progress}%</span>
+        <div><i style="width:${project.progress}%"></i></div>
+        <small>${escapeHtml(client?.company_name || "Cliente")} • ${escapeHtml(statusLabel[project.status] || project.status)}</small>
       </div>
-    `).join("")
-    : '<div class="empty-state">Nenhum projeto em andamento.</div>';
+    `;
+      }).join("") + '<button class="small-action empty-action" type="button" data-page-target="projetos">Ver todos os projetos</button>'
+    : emptyState(
+        "Nenhum projeto em andamento.",
+        state.clients.length ? "+ Novo projeto" : "+ Cadastrar cliente",
+        state.clients.length ? "project" : "client"
+      );
+}
+
+function emptyState(message, actionLabel, action) {
+  return `<div class="empty-state"><span>${escapeHtml(message)}</span><button class="small-action empty-action" type="button" data-open-form="${action}">${escapeHtml(actionLabel)}</button></div>`;
 }
 
 function renderClients() {
@@ -452,7 +516,39 @@ function renderClients() {
         <em>${escapeHtml(statusLabel[c.status] || c.status)}</em>
       </div>
     `).join("")
-    : '<div class="empty-state padded">Nenhum cliente cadastrado.</div>';
+    : `<div class="empty-state padded"><span>Nenhum cliente cadastrado.</span><button class="small-action empty-action" type="button" data-open-form="client">+ Novo cliente</button></div>`;
+}
+
+function renderObligations() {
+  const competence = $("obligationCompetenceFilter").value;
+  const department = $("obligationDepartmentFilter").value;
+  const obligations = state.obligations.filter(item =>
+    (!competence || item.competence === competence) &&
+    (!department || item.department === department)
+  );
+
+  $("obligationsRows").innerHTML = obligations.length
+    ? obligations.map(item => {
+        const client = state.clients.find(candidate => candidate.id === item.client_id);
+        const next = nextObligationStatus(item.status);
+        const overdue = item.status !== "completed" && item.due_date < new Date().toISOString().slice(0, 10);
+        const dueDate = new Date(`${item.due_date}T00:00:00`).toLocaleDateString("pt-BR");
+        return `
+          <div class="row obligation-row">
+            <span class="obligation-name"><b>${escapeHtml(client?.company_name || "Cliente")}</b><small>${escapeHtml(item.title)}</small></span>
+            <span>${escapeHtml(departmentLabel[item.department] || item.department)}</span>
+            <span>${escapeHtml(item.competence)}</span>
+            <span class="${overdue ? "obligation-overdue" : ""}">${dueDate}${overdue ? " • Atrasada" : ""}</span>
+            <em>${escapeHtml(statusLabel[item.status] || item.status)}</em>
+            <span>${next ? `<button class="small-action" data-obligation-advance="${item.id}" data-next="${next}">Avançar</button>` : "Concluída"}</span>
+          </div>
+        `;
+      }).join("")
+    : `<div class="empty-state padded"><span>Nenhuma obrigação encontrada para esses filtros.</span><button class="small-action empty-action" type="button" data-open-form="${state.clients.length ? "obligation" : "client"}">${state.clients.length ? "+ Nova obrigação" : "+ Cadastrar cliente"}</button></div>`;
+
+  document.querySelectorAll("[data-obligation-advance]").forEach(button => {
+    button.addEventListener("click", () => advanceObligation(button.dataset.obligationAdvance, button.dataset.next));
+  });
 }
 
 function projectCard(project) {
@@ -471,9 +567,12 @@ function renderProjects() {
   const development = state.projects.filter(p => p.status === "development");
   const testing = state.projects.filter(p => !["planning", "development"].includes(p.status));
 
-  $("projectsPlanning").innerHTML = planning.map(projectCard).join("") || '<div class="empty-state">Vazio</div>';
-  $("projectsDevelopment").innerHTML = development.map(projectCard).join("") || '<div class="empty-state">Vazio</div>';
-  $("projectsTesting").innerHTML = testing.map(projectCard).join("") || '<div class="empty-state">Vazio</div>';
+  const action = state.clients.length ? "project" : "client";
+  const label = state.clients.length ? "+ Novo projeto" : "+ Cadastrar cliente";
+  const empty = () => emptyState("Nenhum projeto nesta etapa.", label, action);
+  $("projectsPlanning").innerHTML = planning.map(projectCard).join("") || empty();
+  $("projectsDevelopment").innerHTML = development.map(projectCard).join("") || empty();
+  $("projectsTesting").innerHTML = testing.map(projectCard).join("") || empty();
 }
 
 function nextStatus(current) {
@@ -496,7 +595,7 @@ function renderServiceOrders() {
           </div>
         `;
       }).join("")
-    : '<div class="empty-state padded">Nenhuma OS cadastrada.</div>';
+    : `<div class="empty-state padded"><span>Nenhuma OS cadastrada.</span><button class="small-action empty-action" type="button" data-open-form="${state.clients.length ? "service-order" : "client"}">${state.clients.length ? "+ Nova OS" : "+ Cadastrar cliente"}</button></div>`;
 
   document.querySelectorAll("[data-history]").forEach(btn => btn.addEventListener("click", () => openHistory(btn.dataset.history)));
   document.querySelectorAll("[data-advance]").forEach(btn => btn.addEventListener("click", () => advanceOrder(btn.dataset.advance, btn.dataset.next)));
@@ -562,6 +661,74 @@ function openClientForm() {
       });
       closeModal();
       showToast("Cliente cadastrado.");
+      await loadAll();
+    } catch (error) {
+      showToast(error.message, "error");
+    }
+  });
+}
+
+function nextObligationStatus(current) {
+  const flow = ["pending", "in_progress", "waiting", "completed"];
+  const index = flow.indexOf(current);
+  return index >= 0 && index < flow.length - 1 ? flow[index + 1] : null;
+}
+
+async function advanceObligation(id, next) {
+  try {
+    await api(`/accounting-obligations/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: next })
+    });
+    showToast(`Obrigação atualizada para ${statusLabel[next] || next}.`);
+    await loadAll();
+  } catch (error) {
+    showToast(error.message, "error");
+  }
+}
+
+function openObligationForm() {
+  if (!state.clients.length) {
+    showToast("Cadastre um cliente antes de criar uma obrigação.", "error");
+    return;
+  }
+
+  const competence = new Date().toISOString().slice(0, 7);
+  openModal("Nova obrigação contábil", `
+    <form id="obligationForm" class="form-stack">
+      <label>Cliente<select id="obligationClient" required><option value="">Selecione</option>${clientOptions()}</select></label>
+      <label>Descrição<input id="obligationTitle" placeholder="Ex.: Apuração de impostos" required></label>
+      <div class="form-grid">
+        <label>Departamento
+          <select id="obligationDepartment" required>
+            <option value="fiscal">Fiscal</option><option value="payroll">Folha</option><option value="accounting">Contábil</option>
+            <option value="corporate">Societário</option><option value="other">Outros</option>
+          </select>
+        </label>
+        <label>Competência<input id="obligationCompetence" type="month" value="${competence}" required></label>
+      </div>
+      <label>Data de vencimento<input id="obligationDueDate" type="date" required></label>
+      <label>Observações<textarea id="obligationNotes" rows="3"></textarea></label>
+      <button class="primary wide" type="submit">Criar obrigação</button>
+    </form>
+  `);
+
+  $("obligationForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    try {
+      await api("/accounting-obligations", {
+        method: "POST",
+        body: JSON.stringify({
+          client_id: Number($("obligationClient").value),
+          title: $("obligationTitle").value.trim(),
+          department: $("obligationDepartment").value,
+          competence: $("obligationCompetence").value,
+          due_date: $("obligationDueDate").value,
+          notes: $("obligationNotes").value.trim() || null
+        })
+      });
+      closeModal();
+      showToast("Obrigação contábil cadastrada.");
       await loadAll();
     } catch (error) {
       showToast(error.message, "error");
@@ -685,7 +852,7 @@ async function openHistory(id) {
             <small>${escapeHtml(item.note || "Alteração registrada")}</small>
           </div>
         `).join("")}</div>`
-      : '<div class="empty-state">Nenhum histórico registrado.</div>');
+      : '<div class="empty-state"><span>Nenhum histórico registrado.</span><button class="small-action empty-action" type="button" data-open-form="service-order">+ Nova OS</button></div>');
   } catch (error) {
     showToast(error.message, "error");
   }
@@ -693,8 +860,22 @@ async function openHistory(id) {
 
 restoreSession();
 
-document.querySelectorAll("[data-page-target]").forEach(btn => btn.addEventListener("click", () => {
-  const target = btn.dataset.pageTarget;
-  const navButton = document.querySelector('nav button[data-page="' + target + '"]');
-  if (navButton) navButton.click();
-}));
+document.addEventListener("click", event => {
+  const pageButton = event.target.closest("[data-page-target]");
+  if (pageButton) {
+    const navButton = document.querySelector(`nav button[data-page="${pageButton.dataset.pageTarget}"]`);
+    navButton?.click();
+    return;
+  }
+
+  const button = event.target.closest("[data-open-form]");
+  if (!button) return;
+
+  const forms = {
+    client: openClientForm,
+    obligation: openObligationForm,
+    project: openProjectForm,
+    "service-order": openOsForm
+  };
+  forms[button.dataset.openForm]?.();
+});

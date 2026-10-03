@@ -50,21 +50,22 @@
 
 <div id="appShell" class="app-shell hidden">
   <aside>
-    <div class="brand"><span>VERTEX</span><small>BUSINESS PLATFORM</small></div>
+    <div class="brand"><span>VERTEX</span><small>CAMADA OPERACIONAL</small></div>
     <nav>
       <button class="active" data-page="dashboard">▦ Visão Geral</button>
       <button data-page="clientes">◎ Clientes</button>
+      <button data-page="obrigacoes">◷ Obrigações</button>
       <button data-page="softwares">▣ Softwares</button>      <button data-page="projetos">◇ Projetos</button>
       <button data-page="servicos">☷ Serviços / OS</button>
       <button data-page="roadmap">↗ Estratégia</button>
     </nav>
-    <div class="phase">Vertex Business Suite<br><small>Operação integrada</small></div>
+    <div class="phase">Gestão da operação<br><small>Clientes, projetos e serviços</small></div>
   </aside>
 
   <main>
     <header>
       <div>
-        <small>VERTEX PLATFORM</small>
+        <small>CAMADA OPERACIONAL</small>
         <h1 id="title">Visão geral</h1>
         <span id="apiStatus" class="api-status">Conectando à API...</span>
       </div>
@@ -78,38 +79,39 @@
     <section id="dashboard" class="page show">
       <div class="hero">
         <div>
-          <span class="pill">PLATAFORMA EMPRESARIAL</span>
-          <h2>Software para centralizar e automatizar operações.</h2>
-          <p>Clientes, projetos, serviços, automações, dados e inteligência em um único ecossistema.</p>
+          <span class="pill">OPERAÇÃO CONECTADA</span>
+          <h2>A camada operacional do seu negócio.</h2>
+          <p>Clientes, projetos, ordens de serviço e auditoria em um só lugar. Projetada para se integrar ao seu financeiro, não substituí-lo.</p>
         </div>
         <div class="progress">
-          <b>Vertex Suite</b><strong>6 módulos</strong>
-          <div><i style="width:72%"></i></div>
-          <small>Core operacional ativo • expansão modular</small>
+          <b>Frentes conectadas</b><strong>4</strong>
+          <div><i style="width:100%"></i></div>
+          <small>CRM • Projetos • Serviços • Auditoria</small>
         </div>
       </div>
 
       <div class="cards">
-        <article><small>CLIENTES</small><b id="totalClients">0</b><span>Base cadastrada</span></article>
-        <article><small>PROJETOS</small><b id="totalProjects">0</b><span>Projetos registrados</span></article>
-        <article><small>OS ABERTAS</small><b id="totalOpenOs">0</b><span>Operação em andamento</span></article>
-        <article><small>SOFTWARES</small><b>6</b><span>Ecossistema Vertex</span></article>
+        <article><small>CARTEIRA ATIVA</small><b id="totalClients">0</b><span>Clientes acompanhados</span></article>
+        <article><small>PROJETOS EM ANDAMENTO</small><b id="totalActiveProjects">0</b><span>Entregas da operação</span></article>
+        <article><small>OS EM ABERTO</small><b id="totalOpenOs">0</b><span>Atendimentos e solicitações</span></article>
+        <article><small>EVENTOS DE AUDITORIA</small><b id="totalAuditEvents">0</b><span>Alterações rastreáveis</span></article>
       </div>
 
       <div class="grid">
         <article class="panel">
-          <div class="panel-head"><h3>Projetos em andamento</h3><span class="badge">Tempo real</span></div>
+          <div class="panel-head"><h3>Projetos em andamento</h3><span class="badge">Visão operacional</span></div>
           <div id="dashboardProjects" class="project-list"></div>
         </article>
         <article class="panel">
-          <h3>Ecossistema Vertex</h3>
+          <h3>Ecossistema operacional</h3>
           <ul>
-            <li>Vertex Core <em>operacional</em></li>
-            <li>Vertex Flow <em>automação</em></li>
-            <li>Vertex Data <em>analytics</em></li>
-            <li>Vertex Connect <em>integrações</em></li>
-            <li>Vertex Assistant <em>IA empresarial</em></li>
+            <li>Vertex Core <em>CRM, projetos e OS</em></li>
+            <li>Vertex Flow <em>automação de processos</em></li>
+            <li>Vertex Data <em>indicadores operacionais</em></li>
+            <li>Vertex Connect <em>integração futura com ContaAzul e outros ERPs</em></li>
+            <li>Vertex Assistant <em>IA na operação</em></li>
           </ul>
+          <p class="integration-note">O financeiro e o fiscal continuam no sistema que sua empresa já usa. O Vertex conecta as equipes, demandas e entregas da operação.</p>
         </article>
       </div>
     </section>
@@ -125,12 +127,32 @@
       </div>
     </section>
 
+    <section id="obrigacoes" class="page">
+      <div class="section-head">
+        <div><h2>Obrigações contábeis</h2><p>Fechamentos por cliente, departamento e competência.</p></div>
+        <button id="newObligationBtn" class="primary">+ Nova obrigação</button>
+      </div>
+      <div class="obligation-filters">
+        <label>Competência<input id="obligationCompetenceFilter" type="month"></label>
+        <label>Departamento
+          <select id="obligationDepartmentFilter">
+            <option value="">Todos</option><option value="fiscal">Fiscal</option><option value="payroll">Folha</option>
+            <option value="accounting">Contábil</option><option value="corporate">Societário</option><option value="other">Outros</option>
+          </select>
+        </label>
+      </div>
+      <div class="panel table">
+        <div class="row obligation-row head"><span>Cliente / obrigação</span><span>Departamento</span><span>Competência</span><span>Vencimento</span><span>Status</span><span>Ação</span></div>
+        <div id="obligationsRows"></div>
+      </div>
+    </section>
+
 
     <section id="softwares" class="page">
       <div class="section-head">
         <div>
           <h2>Softwares Vertex</h2>
-          <p>Um ecossistema modular para gestão, automação, dados, integrações e inteligência empresarial.</p>
+          <p>Módulos para conectar clientes, projetos, serviços e decisões, sem substituir seu ERP financeiro ou fiscal.</p>
         </div>
         <span class="suite-label">VERTEX BUSINESS SUITE</span>
       </div>
@@ -140,7 +162,7 @@
           <div class="software-icon">C</div>
           <div class="software-top"><span class="software-status live">Operacional</span><small>CORE</small></div>
           <h3>Vertex Core</h3>
-          <p>Central de operações: clientes, projetos, ordens de serviço, usuários e histórico.</p>
+          <p>CRM e gestão de projetos na mesma base das ordens de serviço, com fluxo de trabalho e auditoria.</p>
           <div class="software-tags"><span>CRM</span><span>Projetos</span><span>OS</span><span>Auditoria</span></div>
           <button class="software-action" data-page-target="dashboard">Abrir operação →</button>
         </article>
@@ -165,8 +187,8 @@
           <div class="software-icon">X</div>
           <div class="software-top"><span class="software-status roadmap">Planejado</span><small>CONNECT</small></div>
           <h3>Vertex Connect</h3>
-          <p>Hub de APIs e integrações com ERP, WhatsApp, e-commerce, pagamentos e sistemas externos.</p>
-          <div class="software-tags"><span>APIs</span><span>Integrações</span><span>Webhooks</span></div>
+          <p>Será o elo entre a operação Vertex e o financeiro que sua empresa já utiliza, com integração futura à ContaAzul e outros ERPs.</p>
+          <div class="software-tags"><span>ContaAzul</span><span>APIs</span><span>Webhooks</span></div>
         </article>
 
         <article class="software-card">

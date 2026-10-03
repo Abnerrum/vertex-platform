@@ -8,7 +8,7 @@ Plataforma de operações e automação para empresas que já têm ferramentas d
 
 Fluxo atual:
 
-Login → Dashboard → Clientes → Projetos → Serviços/OS → Histórico
+Login → Dashboard operacional → Carteira de clientes → Projetos → Ordens de Serviço → Auditoria
 
 ### Status atual — v0.6.1
 - API FastAPI com documentação interativa
@@ -18,7 +18,8 @@ Login → Dashboard → Clientes → Projetos → Serviços/OS → Histórico
 - CRUD de projetos vinculados aos clientes
 - CRUD de Ordens de Serviço
 - Prioridade, status, prazo e histórico automático de OS
-- Dashboard com indicadores reais
+- Dashboard com carteira ativa, projetos em andamento, OS abertas e eventos de auditoria
+- Seed opcional com clientes, projetos e OS fictícios para demonstração
 - Frontend demonstrativo conectado à API real
 - A própria API serve a interface em `/app/`, evitando erro de conexão na demo local
 - Cadastro de clientes, projetos e OS pela interface
@@ -55,6 +56,17 @@ Swagger:
 `http://127.0.0.1:8000/docs`
 
 No primeiro acesso, use a opção **Primeiro acesso** para criar o administrador. Depois, todos os dados cadastrados na interface são gravados pela API.
+
+### Popular dados de demonstração
+
+Depois de criar o administrador pela interface, pare o servidor com `Ctrl+C` e rode no PowerShell:
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m app.seed_demo
+```
+
+O seed cria 15 clientes fictícios, 8 projetos em andamento, 5 OS abertas com etapas variadas e eventos de auditoria. Ele pode ser executado novamente sem duplicar esses registros. Depois, inicie a demo novamente com `INICIAR_DEMO.bat`.
 
 > A página publicada no Netlify é apenas o frontend estático. Sem um backend público ela não consegue cadastrar usuários. Para a apresentação funcional local, use `http://127.0.0.1:8000/app/`.
 

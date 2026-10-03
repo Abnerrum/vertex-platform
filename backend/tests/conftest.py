@@ -14,6 +14,7 @@ os.environ["SECRET_KEY"] = "test-secret-key-with-at-least-32-bytes-long"
 from fastapi.testclient import TestClient  # noqa: E402
 
 from app.database.session import Base, engine  # noqa: E402
+from app.models.accounting_obligation import AccountingObligation  # noqa: E402,F401
 from app.main import app  # noqa: E402
 
 ADMIN = {
