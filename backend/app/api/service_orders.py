@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user, require_admin
 from app.database.session import get_db
 from app.models.client import Client
 from app.models.project import Project
@@ -223,7 +223,11 @@ def update_service_order(
 
 
 @router.delete("/{service_order_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_service_order(service_order_id: int, db: Session = Depends(get_db)):
+def delete_service_order(
+    service_order_id: int,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     order = db.get(ServiceOrder, service_order_id)
     if not order:
         raise HTTPException(status_code=404, detail="OS não encontrada")
